@@ -3,7 +3,7 @@
 namespace Examples\SpatieActivityLog;
 
 use App\Http\Controllers\Controller as BaseController;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class Controller extends BaseController
 {
@@ -24,29 +24,39 @@ class Controller extends BaseController
      */
     public function index()
     {
-        // Log related activities together
-        Activity::log(function() {
+        try {
+            $this->test();
+        } catch (\Throwable $e) {
+            // ;(
+            debug($e);
+        }
 
-            /** @var BookStore $bookStore */
-            $bookStore = BookStore::firstOrCreate(['name' => 'Example bookstore 5']);
+        dump(Activity::getActivityGroup());
 
-            // Add
-            $book = Book::firstOrNew(['name' => 'Book X2']);
+        // Activity::log(function() {
+        //     dump(Activity::getActivityGroup());
 
-            $bookStore->books()->save($book);
+        //     Activity::log(function() {
 
-            // Nested activity MUST NOT override activity group in his parent
-            Activity::log(function() use ($bookStore) {
-
-                $bookStore->books()->save(
-                    Book::firstOrNew(['name' => 'Book X6'])
-                );
+        //         dump(Activity::getActivityGroup());
+        //     });
     
-            });
+        //     dump(Activity::getActivityGroup());
+        // });
 
-        });
-        
+        // Activity::log(function() {
+        //     dump(Activity::getActivityGroup());
+        // });
+
+        // dump(Activity::getActivityGroup());
 
         return 'spatie.act.log';
+    }
+
+    public function test()
+    {
+        Activity::log(function() {
+            throw new ModelNotFoundException();
+        });
     }
 }
