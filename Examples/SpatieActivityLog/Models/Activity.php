@@ -8,35 +8,41 @@ use Spatie\Activitylog\Models\Activity as SpatieActivity;
 
 class Activity extends SpatieActivity
 {
-    protected static $activityGroup = null;
+    protected static $activityGroup = [];
 
     public static function boot()
     {
         parent::boot();
         
-        static::saving(function(self $activity) {
-            // Save activity group if exists
-            $activity->group = $activity::$activityGroup;
+        static::saving(function($activity) {
+            $activity->group = $activity::getActivityGroup();
         });
     }
 
     public static function setActivityGroup(string $group)
     {
-        if(static::$activityGroup !== null || !empty(static::$activityGroup)) {
-            return;
-        }
+        static::$activityGroup[] = $group;
+    }
 
-        static::$activityGroup = $group;
+    public static function getActivityGroup()
+    {
+        return static::$activityGroup[0] ?? null;
     }
 
     public static function resetActivityGroup()
     {
-        static::$activityGroup = null;
+        static::$activityGroup = [];
     }
 
     public static function log(Closure $closure) {
         static::setActivityGroup(Str::random(12));
-        $closure();
-        static::resetActivityGroup();
+
+        // Try with only finally block
+        // We dont want to catch exceptions, we only have to ensure that activity group will be popped out of array
+        try {
+            $closure();
+        } finally {
+            array_pop(static::$activityGroup);
+        }
     }
 }

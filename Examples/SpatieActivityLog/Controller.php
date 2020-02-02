@@ -56,6 +56,8 @@ class Controller extends BaseController
     public function test()
     {
         Activity::log(function() {
+            dump(Activity::getActivityGroup());
+
             throw new ModelNotFoundException();
         });
     }
